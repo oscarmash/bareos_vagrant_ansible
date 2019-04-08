@@ -1,0 +1,9 @@
+---
+- name: Instalacion de Bareos en Vagrant
+  #hosts: vagrant-group
+  #hosts: vagrant-host
+  hosts: all
+  become: yes
+
+  roles:
+    - ansible_bareos

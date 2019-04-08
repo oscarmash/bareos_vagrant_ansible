@@ -1,0 +1,56 @@
+---
+# tasks file for ansible_bareos
+
+- name: Install basic packages
+  apt:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - postgresql
+    - php
+    - php-cli
+    - php-common
+    - libapache2-mod-php
+
+- name: Add signing key Bareos
+  apt_key:
+    url: http://download.bareos.org/bareos/release/latest/xUbuntu_18.04/Release.key
+    state: present
+
+- name: Add repository Bareos
+  apt_repository:
+    repo: deb http://download.bareos.org/bareos/release/latest/xUbuntu_18.04/ /
+    state: present
+    filename: bareos
+
+- name: Enable universe repository
+  apt_repository:
+    repo: "{{ item }}"
+  loop:
+    - "deb http://archive.ubuntu.com/ubuntu/ bionic universe"
+    - "deb http://archive.ubuntu.com/ubuntu/ bionic-updates universe"
+    - "deb http://security.ubuntu.com/ubuntu/ bionic-security universe"
+
+- name: Ejecutando "apt-get update"
+  apt:
+    update_cache: yes
+
+- name: Install Bareos packages
+  apt:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - bareos
+    - bareos-database-postgresql
+    - bareos-webui
+
+- name: Move config Bareos
+  command: mv /etc/bareos/bareos-dir.d/console/admin.conf.example /etc/bareos/bareos-dir.d/console/admin.conf
+
+- name: Restart services
+  systemd: name="{{ item }}" state=restarted
+  loop:
+    - "bareos-dir"
+    - "bareos-sd"
+    - "bareos-fd"
+    - "apache2"
